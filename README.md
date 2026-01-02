@@ -1,3 +1,7 @@
+## Author
+- Name: Pratik Pattewar
+- Role: fullstack developer
+- Contact: pratikpattewar1@gmail.com
 ## MYSQL Database 
 
 1. Create a Database schema named :  user-system

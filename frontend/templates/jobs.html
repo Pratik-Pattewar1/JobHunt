@@ -1,14 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Profile</title>
+    <title>Available Jobs</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f0f0;
-            margin: 0;
-            padding: 0;
-        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f0f0f0;
@@ -23,7 +17,7 @@
         display: flex;
         align-items: center;
         padding: 10px 50px;
-        box-shadow: 1px 1px 1px black;
+        box-shadow: 1px 2px 4px black;
 
         position: sticky;
         top: 0;
@@ -85,49 +79,55 @@
         h1 {
             text-align: center;
             margin-top: 30px;
-            color: #333;
-            animation: fadeIn 1s;
         }
 
-        .profile-container {
+        table {
             width: 80%;
             margin: 30px auto;
+            border-collapse: collapse;
             background-color: #fff;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
-            padding: 20px;
-            animation: slideInUp 1s;
         }
 
-        p {
-            font-size: 18px;
-            margin: 10px 0;
-            color: #666;
+        th, td {
+            padding: 12px;
+            text-align: center;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        th {
+            background-color: #333;
+            color: #fff;
         }
 
-        @keyframes slideInUp {
-            from {
-                transform: translateY(50px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .apply-button {
+            display: block;
+            width: 100px;
+            margin: 0 auto;
+            padding: 8px;
+            background-color: #4CAF50;
+            color: #fff;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .apply-button:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
 <body>
     <header>
-        <div class="logo">
-          <!-- Insert your logo image here -->
-          <img src="{{ url_for('static', filename='images/home-img/Job-logo-2.jpg') }}" alt="Logo">
-        </div>
+<!--        <div class="logo">-->
+<!--          &lt;!&ndash; Insert your logo image here &ndash;&gt;-->
+<!--          <img src="{{ url_for('static', filename='images/home-img/Job-logo-2.jpg') }}" alt="Logo">-->
+<!--        </div>-->
         <nav class="navbar">
           <ul>
             <li><a href="/">Home</a></li>
@@ -144,18 +144,32 @@
 
           </ul>
         </nav>
-    </header>
+      </header>
 
-    <div class="profile-container">
-        <h1>User Profile</h1>
-        {% if user_profile %}
-            <p><strong>Name:</strong> {{ user_profile['name'] }}</p>
-            <p><strong>Email:</strong> {{ user_profile['email'] }}</p>
-            <p><strong>Qualification:</strong> {{ user_profile['qualification'] }}</p>
-            <p><strong>Skills:</strong> {{ user_profile['skills'] }}</p>
-        {% else %}
-            <p>No profile details found.</p>
-        {% endif %}
-    </div>
+    <h1>Available Jobs</h1>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Job Title</th>
+            <th>Job Role</th>
+            <th>Skills</th>
+            <th>Qualifications</th>
+            <th>Vacancy</th>
+            <th>Last Date to Apply</th>
+            <th>Apply fro job</th>
+        </tr>
+        {% for job in jobs %}
+        <tr>
+            <td>{{ job.id }}</td>
+            <td>{{ job.job_title }}</td>
+            <td>{{ job.job_role }}</td>
+            <td>{{ job.skills }}</td>
+            <td>{{ job.qualifications }}</td>
+            <td>{{ job.vacancy }}</td>
+            <td>{{ job.last_date }}</td>
+            <td><a href="/apply-job" class="apply-button">Apply</a></td>
+        </tr>
+        {% endfor %}
+    </table>
 </body>
 </html>

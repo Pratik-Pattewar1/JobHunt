@@ -1,21 +1,24 @@
-from flask import Flask, render_template, request, jsonify,redirect, url_for, session , flash
+import os  # 1. ADD THIS IMPORT
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash
 
 from chat import get_response
 
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
 import re
-  
-  
-app = Flask(__name__)
-  
-  
+
+# 2. UPDATE THIS LINE to point to your frontend folder
+app = Flask(__name__,
+            template_folder="../frontend/templates",
+            static_folder="../frontend/static")
+
 app.secret_key = 'xyzsdfg'
+# ... leave everything else exactly as it was ...
   
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = '@Rohit$4331&'
-app.config['MYSQL_DB'] = 'user-system'
+app.config['MYSQL_PASSWORD'] = '2300030969'
+app.config['MYSQL_DB'] = 'user_system'
   
 mysql = MySQL(app)
   
@@ -140,7 +143,8 @@ def apply_job():
 # Job posted by admin only
 @app.route('/job-post', methods=['GET', 'POST'])
 def job_post():
-    if 'loggedin' in session and session['email'] == 'userreply.ro@gmail.com':
+    print(session['email'])
+    if 'loggedin' in session and session['email'] == 'pratikpattewar1@gmail.com':
         if request.method == 'POST':
             job_title = request.form['jobTitle']
             job_role = request.form['jobRole']
