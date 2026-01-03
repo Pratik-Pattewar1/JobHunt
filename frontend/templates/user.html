@@ -47,7 +47,14 @@
                         <li class="nav-item">
                             <a class="nav-link " href="profile">Profile</a>
                         </li>
-                        
+                        {% if session.role == 'admin' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin">
+                              <button class="btn btn-warning">Admin Dashboard</button>
+                           </a>
+                         </li>
+                        {% endif %}
+
                         <li class="nav-item">
                             <a class="nav-link" href="#"><i class="fa fa-bell-o" aria-hidden="true"></i></a>
                         </li>
@@ -60,17 +67,20 @@
                             <a class="nav-link " href="{{ url_for('logout') }}"  style="padding: 5px 15px; border: none; outline: none; text-decoration: none; border-radius: 20px; background-color: rgb(23, 23, 67); color: black important; ">Logout</a>
                         </li>
 
-                        <li class="nav-item">
-                            <a class="nav-link" href="job-post">
-                                <div class="apply-btn">
-    <a href="/job-post" style="text-decoration: none;">
-        <button type="button" class="btn btn-primary" style="margin-top:-20px;">
-    <i class="fa fa-paper-plane-o" aria-hidden="true"></i> POST NEW JOB
-</button>
+                        {% if session.role == 'admin' %}
+<li class="nav-item">
+    <a class="nav-link" href="job-post">
+        <div class="apply-btn">
+            <a href="/job-post" style="text-decoration: none;">
+                <button type="button" class="btn btn-primary" style="margin-top:-20px;">
+                    <i class="fa fa-paper-plane-o" aria-hidden="true"></i> POST NEW JOB
+                </button>
+            </a>
+        </div>
     </a>
-</div>
-                            </a>
-                        </li>
+</li>
+{% endif %}
+
                     </ul>
                 </div>
             </div>

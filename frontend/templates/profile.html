@@ -153,6 +153,14 @@
             <p><strong>Email:</strong> {{ user_profile['email'] }}</p>
             <p><strong>Qualification:</strong> {{ user_profile['qualification'] }}</p>
             <p><strong>Skills:</strong> {{ user_profile['skills'] }}</p>
+
+        <div style="margin-top:20px;">
+  <a href="/profile/edit" class="btn btn-primary"
+     style="padding:10px 20px; background:#007bff; color:white; border-radius:5px; text-decoration:none;">
+     Edit Profile
+  </a>
+</div>
+
         {% else %}
             <p>No profile details found.</p>
         {% endif %}

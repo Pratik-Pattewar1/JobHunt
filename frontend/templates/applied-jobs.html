@@ -2,93 +2,37 @@
 <html>
 <head>
     <title>Applied Jobs</title>
+
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f0f0f0;
             margin: 0;
-            padding: 0;
         }
 
-        /* header styling */
         header {
-        background-color: rgb(235, 235, 248);
-        color: #070910;
-        display: flex;
-        align-items: center;
-        padding: 10px 50px;
-        box-shadow: 1px 1px 1px black;
-
-        position: sticky;
-        top: 0;
-        
-        }
-
-        .logo {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        }
-
-        .logo img {
-        height: 40px; /* Adjust the height of the logo to your preference */
-        margin-right: 10px;
-        }
-
-        .navbar {
-        flex: 1;
-        display: flex;
-        justify-content: flex-end;
+            background-color: rgb(235, 235, 248);
+            padding: 10px 50px;
+            box-shadow: 1px 1px 1px black;
+            position: sticky;
+            top: 0;
         }
 
         .navbar ul {
-        list-style: none;
-        display: flex;
-        margin: 0;
-        padding: 0;
-        }
-
-        .navbar li {
-        margin-left: 25px; /* Adjust the spacing between navbar items to your preference */
-        }
-
-        .navbar li:first-child {
-        margin-left: 0; /* Remove left margin for the first navbar item */
-        }
-
-        .navbar a {
-        color: black; 
-        text-decoration: none;
-        font-weight: 600;
-        }
-
-        
-
-        .logout-btn{
-            border: 1px solid gray;
-            background-color: rgb(217, 217, 236);
-            color: black;
-            padding: 3px 15px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-        .logout-btn:hover , .navbar a:hover{
-            scale: 1.008;
-        }
-
-        h1 {
-            text-align: center;
-            margin-top: 30px;
+            list-style: none;
+            display: flex;
+            justify-content: flex-end;
+            gap: 25px;
+            margin: 0;
         }
 
         table {
             width: 80%;
             margin: 30px auto;
             border-collapse: collapse;
-            background-color: #fff;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            background: white;
             border-radius: 8px;
-            animation: fadeIn 1s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
         th, td {
@@ -97,78 +41,73 @@
         }
 
         th {
-            background-color: #333;
-            color: #fff;
+            background:#333;
+            color:white;
         }
 
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
+        .approved { color: green; font-weight: 600; }
+        .rejected { color: red; font-weight: 600; }
+        .pending { color: orange; font-weight: 600; }
 
-        .apply-button {
-            display: block;
-            width: 100px;
-            margin: 0 auto;
-            padding: 8px;
-            background-color: #4CAF50;
-            color: #fff;
-            text-align: center;
-            text-decoration: none;
-            border-radius: 4px;
-            transition: background-color 0.3s;
-        }
-
-        .apply-button:hover {
-            background-color: #45a049;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
     </style>
 </head>
+
 <body>
-    <header>
-<!--        <div class="logo">-->
-<!--          &lt;!&ndash; Insert your logo image here &ndash;&gt;-->
-<!--          <img src="{{ url_for('static', filename='images/home-img/Job-logo-2.jpg') }}" alt="Logo">-->
-<!--        </div>-->
-        <nav class="navbar">
-          <ul>
+
+<header>
+    <nav class="navbar">
+        <ul>
             <li><a href="/">Home</a></li>
             <li><a href="/jobs">Job</a></li>
             <li><a href="/applied-jobs">Applied Job</a></li>
             <li><a href="/profile">Profile</a></li>
-            
-            <li class="nav-item">
-                <button style="width:auto;background: rgb(147, 144, 220);border:1px solid gray;color: white ;padding: 5px 12px; border-radius: 4px;"><strong>{{session.name}}</strong></button>
-                
-                
-             </li>
-             <li class="logout-btn"><a href="/logout">Logout</a></li>
 
-          </ul>
-        </nav>
-    </header>
+            <li>
+                <button style="background:#9390dc;color:white;border-radius:4px;">
+                    {{session.name}}
+                </button>
+            </li>
 
-    <h1>Applied Jobs</h1>
+            <li class="logout-btn"><a href="/logout">Logout</a></li>
+        </ul>
+    </nav>
+</header>
 
-    <table>
-        <tr>
-            <th>Job Id</th>
-            <th>Company Name</th>
-            <th>Job Role</th>
-            <th>Skills</th>
-        </tr>
-        {% for job in applied_jobs %}
-        <tr>
-            <td>{{job.id}}</td>
-            <td>{{ job.job_title }}</td>
-            <td>{{ job.job_role }}</td>
-            <td>{{ job.skills }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+
+<h1 style="text-align:center;margin-top:20px;">
+    Your Applied Jobs
+</h1>
+
+
+<table>
+    <tr>
+        <th>Job Title</th>
+        <th>Role</th>
+        <th>Skills</th>
+        <th>Status</th>
+    </tr>
+
+    {% for job in applied_jobs %}
+    <tr>
+        <td>{{ job.job_title }}</td>
+        <td>{{ job.job_role }}</td>
+        <td>{{ job.skills }}</td>
+
+        <td>
+            {% if job.status == 'Approved' %}
+                <span class="approved">Approved</span>
+
+            {% elif job.status == 'Rejected' %}
+                <span class="rejected">Rejected</span>
+
+            {% else %}
+                <span class="pending">Pending</span>
+
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
 </body>
 </html>

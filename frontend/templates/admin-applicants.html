@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin - Applications</title>
+
+<style>
+body{
+font-family:Arial;
+background:#f4f4f4;
+margin:0;
+}
+
+header{
+background:#1f2c56;
+padding:15px;
+color:white;
+font-size:20px;
+}
+
+table{
+width:90%;
+margin:20px auto;
+border-collapse:collapse;
+background:white;
+box-shadow:0 2px 5px rgba(0,0,0,0.2);
+}
+
+th,td{
+padding:12px;
+text-align:center;
+}
+
+th{
+background:#333;
+color:white;
+}
+
+tr:nth-child(even){
+background:#f2f2f2;
+}
+
+a.btn{
+padding:7px 12px;
+border-radius:4px;
+text-decoration:none;
+color:white;
+font-weight:bold;
+}
+
+.approve{ background:green; }
+.reject{ background:red; }
+.pending{ background:orange; }
+
+</style>
+</head>
+
+<body>
+
+<header>
+Admin Dashboard — Applications Review
+</header>
+
+<table>
+<tr>
+<th>ID</th>
+<th>Candidate</th>
+<th>Email</th>
+<th>Job Title</th>
+<th>Role</th>
+<th>Skills</th>
+<th>Status</th>
+<th>Action</th>
+</tr>
+
+{% for a in applicants %}
+<tr>
+<td>{{a.id}}</td>
+<td>{{a.name}}</td>
+<td>{{a.email}}</td>
+<td>{{a.job_title}}</td>
+<td>{{a.job_role}}</td>
+<td>{{a.skills}}</td>
+<td>{{a.status}}</td>
+
+<td>
+<a class="btn approve" href="/admin/update_status/{{a.id}}/Approved">Approve</a>
+<a class="btn reject" href="/admin/update_status/{{a.id}}/Rejected">Reject</a>
+<a class="btn pending" href="/admin/update_status/{{a.id}}/Pending">Pending</a>
+</td>
+</tr>
+{% endfor %}
+
+</table>
+
+</body>
+</html>
