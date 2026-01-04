@@ -1,10 +1,8 @@
-
 <html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Login</title>
-<!-- <link rel="stylesheet" href="{{ url_for('static', filename='register.css') }}"> -->
 
 <style>
 	*{
@@ -28,14 +26,11 @@
 		border-radius: 20px;
 		outline: none;
 		
-		-webkit-box-shadow: -1px 1px 5px 5px rgba(0,0,0,0.75);
-		-moz-box-shadow: -1px 1px 5px 5px rgba(0,0,0,0.75);
 		box-shadow: -1px 1px 5px 5px rgba(0,0,0,0.2);
 	}
 	.container:hover{
 		scale: 1.003;
 	}
-
 
 	.container form{
 		display: flex;
@@ -86,33 +81,82 @@
 	}
 
 	.container form p{
-		align-items: center;
-		align-content: center;
 		text-align: center;
 	}
 
 </style>
-             
 </head>
+
 <body>
+
 <div class="container">
 	<h2>Login</h2>
+
 	<form action="/login" method="post">
-        {% if mesage is defined and mesage %}
-			<div class="alert alert-warning">{{ mesage }}</div>
-		{% endif %}
-		
+
 		<div class="form-group">
 			<label for="email">Email:</label>
-			<input type="email" class="form-control" id="email" name="email" placeholder="Enter email" name="email">
+			<input type="email" id="email" name="email" placeholder="Enter email">
 		</div>
+
 		<div class="form-group">
-			<label for="pwd">Password:</label>
-			<input type="password" class="form-control" id="password" name="password" placeholder="Enter password" name="pswd">
+			<label for="password">Password:</label>
+			<input type="password" id="password" name="password" placeholder="Enter password">
 		</div>    
-		<button type="submit" class="btn">Login</button>
-		<p class="bottom">Already have an account?  <a class="bottom" href="/register"> Register here</a></p>
+
+		<button type="submit">Login</button>
+
+		<p class="bottom">
+			Don't have an account?
+			<a href="/register"> Register here</a>
+		</p>
+
 	</form>
-</div>        
+</div>
+
+
+<!-- GLOBAL TOAST (same everywhere) -->
+<div id="toast"
+     style="position:fixed;
+            bottom:25px;
+            right:25px;
+            padding:14px 18px;
+            border-radius:10px;
+            color:white;
+            font-weight:600;
+            display:none;
+            box-shadow:0 4px 10px rgba(0,0,0,0.25);
+            z-index:99999;">
+</div>
+
+<script>
+  function showToast(msg, type){
+
+    let toast = document.getElementById("toast");
+
+    toast.innerHTML = msg;
+
+    if(type === "success")
+        toast.style.background = "#28a745";
+    else if(type === "error")
+        toast.style.background = "#dc3545";
+    else
+        toast.style.background = "#17a2b8";
+
+    toast.style.display = "block";
+
+    setTimeout(()=> toast.style.display="none", 2000);
+  }
+</script>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% set category, msg = messages[-1] %}
+    <script>
+        showToast("{{ msg }}", "{{ category }}")
+    </script>
+  {% endif %}
+{% endwith %}
+
 </body>
 </html>

@@ -1,7 +1,9 @@
-import os  # 1. ADD THIS IMPORT
+import os
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
+from werkzeug.utils import secure_filename
+
 load_dotenv()
 
 from chat import get_response
@@ -10,22 +12,26 @@ from flask_mysqldb import MySQL
 import MySQLdb.cursors
 import re
 
-# 2. UPDATE THIS LINE to point to your frontend folder
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXT
+
 app = Flask(__name__,
             template_folder="../frontend/templates",
             static_folder="../frontend/static")
+app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024   # 5MB max
+ALLOWED_EXT = {'pdf', 'doc', 'docx'}
 
 app.secret_key = 'xyzsdfg'
-# ... leave everything else exactly as it was ...
-  
+
 app.config['MYSQL_HOST'] = os.getenv("DB_HOST")
 app.config['MYSQL_USER'] = os.getenv("DB_USER")
 app.config['MYSQL_PASSWORD'] = os.getenv("DB_PASS")
 app.config['MYSQL_DB'] = os.getenv("DB_NAME")
 
-  
 mysql = MySQL(app)
-  
+
 
 @app.route('/')
 def home():
@@ -34,75 +40,76 @@ def home():
     return render_template('home.html')
 
 
-@app.route('/login', methods =['GET', 'POST'])
+# ---------------- LOGIN ----------------
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     if 'loggedin' in session:
         return redirect(url_for('home'))
-    else:
-        mesage = ''
-        if request.method == 'POST' and 'email' in request.form and 'password' in request.form:
-            email = request.form['email']
-            password = request.form['password']
-            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            cursor.execute('SELECT * FROM user WHERE email = %s', (email,))
-            user = cursor.fetchone()
 
-            if user and check_password_hash(user['password'], password):
-                session['loggedin'] = True
-                session['userid'] = user['userid']
-                session['name'] = user['name']
-                session['email'] = user['email']
-                session['role'] = user['role']
-                return redirect(url_for('home'))
-            else:
-                mesage = 'Incorrect email or password'
+    if request.method == 'POST' and 'email' in request.form and 'password' in request.form:
+        email = request.form['email']
+        password = request.form['password']
 
-            if user:
-                session['loggedin'] = True
-                session['userid'] = user['userid']
-                session['name'] = user['name']
-                session['email'] = user['email']
-                session['role'] = user['role']     # ⭐ NEW LINE
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('SELECT * FROM user WHERE email = %s', (email,))
+        user = cursor.fetchone()
 
-                return redirect(url_for('home'))
+        if user and check_password_hash(user['password'], password):
+            session['loggedin'] = True
+            session['userid'] = user['userid']
+            session['name'] = user['name']
+            session['email'] = user['email']
+            session['role'] = user['role']
 
-            else:
-                mesage = 'Please enter correct email / password !'
+            flash("Login successful 🎉", "success")
+            return redirect(url_for('home'))
+        else:
+            flash("Incorrect email or password ❌", "danger")
 
-        return render_template('login.html', mesage = mesage)
+    return render_template('login.html')
 
-  
+
+# ---------------- LOGOUT ----------------
 @app.route('/logout')
 def logout():
     if 'loggedin' in session:
         session.pop('loggedin', None)
         session.pop('userid', None)
         session.pop('email', None)
-        # return redirect(url_for('login'))
+
+        flash("You have been logged out", "info")
+
     return redirect(url_for('home'))
 
-  
-@app.route('/register', methods =['GET', 'POST'])
+
+# ---------------- REGISTER ----------------
+@app.route('/register', methods=['GET', 'POST'])
 def register():
     if 'loggedin' in session:
         return redirect(url_for('home'))
+
     else:
-        mesage = ''
-        if request.method == 'POST' and 'name' in request.form and 'password' in request.form and 'email' in request.form :
+        if request.method == 'POST' and 'name' in request.form and 'password' in request.form and 'email' in request.form:
             userName = request.form['name']
             password = request.form['password']
             email = request.form['email']
+
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            cursor.execute('SELECT * FROM user WHERE email = % s', (email, ))
+            cursor.execute('SELECT * FROM user WHERE email = %s', (email,))
             account = cursor.fetchone()
+
             if account:
-                mesage = 'Account already exists !'
+                flash("Account already exists!", "warning")
+
             elif not re.match(r'[^@]+@[^@]+\.[^@]+', email):
-                mesage = 'Invalid email address !'
+                flash("Invalid email address!", "danger")
+
             elif not userName or not password or not email:
-                mesage = 'Please fill out the form !'
+                flash("Please fill out the form!", "warning")
+
             else:
                 hashed_password = generate_password_hash(password)
+
                 cursor.execute(
                     'INSERT INTO user (name, email, password, role) VALUES (%s, %s, %s, %s)',
                     (userName, email, hashed_password, 'user')
@@ -110,14 +117,13 @@ def register():
 
                 mysql.connection.commit()
 
-                mesage = 'You have successfully registered !'
+                flash("Registration successful 🎉 Please login.", "success")
                 return redirect(url_for('login'))
-        elif request.method == 'POST':
-            mesage = 'Please fill out the form !'
-        return render_template('register.html', mesage = mesage)
+
+        return render_template('register.html')
 
 
-
+# ---------------- PROFILE ----------------
 @app.route('/profile')
 def profile():
     if 'loggedin' in session:
@@ -129,6 +135,7 @@ def profile():
     else:
         return redirect(url_for('login'))
 
+
 @app.route('/edit-profile', methods=['GET', 'POST'])
 def edit_profile():
     if 'loggedin' not in session:
@@ -137,32 +144,45 @@ def edit_profile():
     email = session['email']
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-    # When user submits form
     if request.method == 'POST':
         name = request.form['name']
         qualification = request.form['qualification']
         skills = request.form['skills']
 
-        cursor.execute("""
-            UPDATE user 
-            SET name=%s, qualification=%s, skills=%s
-            WHERE email=%s
-        """, (name, qualification, skills, email))
+        resume_file = request.files.get('resume')
+        resume_name = None
+
+        if resume_file and allowed_file(resume_file.filename):
+            filename = secure_filename(resume_file.filename)
+            resume_name = f"{session['userid']}_{filename}"
+            resume_file.save(os.path.join(app.config['UPLOAD_FOLDER'], resume_name))
+
+        if resume_name:
+            cursor.execute("""
+                UPDATE user
+                SET name=%s, qualification=%s, skills=%s, resume=%s
+                WHERE email=%s
+            """, (name, qualification, skills, resume_name, email))
+        else:
+            cursor.execute("""
+                UPDATE user
+                SET name=%s, qualification=%s, skills=%s
+                WHERE email=%s
+            """, (name, qualification, skills, email))
 
         mysql.connection.commit()
 
-        session['name'] = name   # update navbar too
-
+        session['name'] = name
         flash("Profile updated successfully!", "success")
         return redirect(url_for('profile'))
 
-    # Show existing data
     cursor.execute("SELECT * FROM user WHERE email=%s", (email,))
     user_profile = cursor.fetchone()
 
     return render_template("edit-profile.html", user=user_profile)
 
 
+# ---------------- JOB LIST ----------------
 @app.route('/jobs')
 def all_jobs():
     if 'loggedin' in session:
@@ -171,9 +191,9 @@ def all_jobs():
         jobs = cursor.fetchall()
         return render_template('jobs.html', jobs=jobs)
     return redirect(url_for('login'))
-    
 
-@app.route('/apply-job', methods=['GET', 'POST'])
+
+# ---------------- APPLY JOB ----------------
 @app.route('/apply-job', methods=['GET', 'POST'])
 def apply_job():
     if 'loggedin' not in session:
@@ -187,7 +207,6 @@ def apply_job():
 
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-        # Check if already applied
         cursor.execute("""
             SELECT * FROM applied_job 
             WHERE email=%s AND job_title=%s
@@ -199,7 +218,6 @@ def apply_job():
             flash("You have already applied for this job.", "warning")
             return redirect(url_for('applied_jobs'))
 
-        # Insert new application
         cursor.execute("""
             INSERT INTO applied_job (email, job_title, job_role, skills, status)
             VALUES (%s, %s, %s, %s, %s)
@@ -213,21 +231,16 @@ def apply_job():
     return render_template('apply-job.html')
 
 
-
-# Job posted by admin only
+# ---------------- ADMIN JOB POST ----------------
 @app.route('/job-post', methods=['GET', 'POST'])
 def job_post():
-
-    # Check if logged in
     if 'loggedin' not in session:
         return redirect(url_for('login'))
 
-    # Allow only admin
     if session.get('role') != 'admin':
         flash('Access denied. Admins only!', 'danger')
         return redirect(url_for('home'))
 
-    # ---- ADMIN ONLY BELOW ----
     if request.method == 'POST':
         job_title = request.form['jobTitle']
         job_role = request.form['jobRole']
@@ -249,25 +262,32 @@ def job_post():
     return render_template('job-post.html')
 
 
-@app.route('/admin')
-def admin_dashboard():
 
-    # Must be logged in
+
+@app.route('/resume/<filename>')
+def resume_file(filename):
+
     if 'loggedin' not in session:
         return redirect(url_for('login'))
 
-    # Must be admin
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+
+# ---------------- ADMIN DASHBOARD ----------------
+@app.route('/admin')
+def admin_dashboard():
+    if 'loggedin' not in session:
+        return redirect(url_for('login'))
+
     if session.get('role') != 'admin':
         flash("Access denied. Admins only!", "danger")
         return redirect(url_for('home'))
 
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-    # Get all jobs
     cursor.execute("SELECT * FROM job")
     jobs = cursor.fetchall()
 
-    # Get all applicants
     cursor.execute("""
         SELECT applied_job.*, user.name 
         FROM applied_job 
@@ -285,7 +305,6 @@ def admin_dashboard():
 
 @app.route('/approve/<int:id>')
 def approve_applicant(id):
-
     if 'loggedin' not in session or session.get('role') != 'admin':
         return redirect(url_for('login'))
 
@@ -299,7 +318,6 @@ def approve_applicant(id):
 
 @app.route('/reject/<int:id>')
 def reject_applicant(id):
-
     if 'loggedin' not in session or session.get('role') != 'admin':
         return redirect(url_for('login'))
 
@@ -311,6 +329,7 @@ def reject_applicant(id):
     return redirect(url_for('admin_dashboard'))
 
 
+# ---------------- USER APPLIED JOBS ----------------
 @app.route('/applied-jobs')
 def applied_jobs():
     if 'loggedin' in session:
@@ -324,37 +343,7 @@ def applied_jobs():
         return redirect(url_for('login'))
 
 
-@app.route('/admin/applicants')
-def admin_applicants():
-    if 'loggedin' in session and session['email'] == 'pratikpattewar1@gmail.com':
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute("""
-            SELECT applied_job.id, applied_job.email, applied_job.job_title,
-                   applied_job.job_role, applied_job.skills, applied_job.status,
-                   user.name
-            FROM applied_job
-            JOIN user ON applied_job.email = user.email
-        """)
-        applicants = cursor.fetchall()
-        return render_template('admin-applicants.html', applicants=applicants)
-    else:
-        return redirect(url_for('login'))
-
-
-@app.route('/admin/update_status/<int:app_id>/<string:new_status>')
-def update_status(app_id, new_status):
-    if 'loggedin' in session and session['email'] == 'pratikpattewar1@gmail.com':
-        cursor = mysql.connection.cursor()
-        cursor.execute(
-            "UPDATE applied_job SET status=%s WHERE id=%s",
-            (new_status, app_id)
-        )
-        mysql.connection.commit()
-        return redirect('/admin/applicants')
-    else:
-        return redirect(url_for('login'))
-
-# Chatbot response data fetching
+# ---------------- CHATBOT ----------------
 @app.post("/predict")
 def predict():
     text = request.get_json().get("message")
@@ -362,8 +351,6 @@ def predict():
     message = {"answer": response}
     return jsonify(message)
 
-# ending of chatbot response data fetching
 
-    
 if __name__ == "__main__":
     app.run(debug=True)

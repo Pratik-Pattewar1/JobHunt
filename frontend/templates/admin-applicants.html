@@ -68,6 +68,7 @@ Admin Dashboard — Applications Review
 <th>Job Title</th>
 <th>Role</th>
 <th>Skills</th>
+<th>Resume</th>
 <th>Status</th>
 <th>Action</th>
 </tr>
@@ -80,6 +81,15 @@ Admin Dashboard — Applications Review
 <td>{{a.job_title}}</td>
 <td>{{a.job_role}}</td>
 <td>{{a.skills}}</td>
+
+<td>
+{% if a.resume %}
+<a href="/resume/{{ a.resume }}" target="_blank">Download</a>
+{% else %}
+No Resume
+{% endif %}
+</td>
+
 <td>{{a.status}}</td>
 
 <td>

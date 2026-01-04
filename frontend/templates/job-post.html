@@ -157,6 +157,40 @@
              
 </head>
 <body>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% set category, message = messages[-1] %}
+
+    <div id="toast"
+      style="
+        position:fixed;
+        top:15px;
+        right:20px;
+        z-index:9999;
+        padding:12px 18px;
+        border-radius:8px;
+        color:white;
+        font-weight:600;
+        box-shadow:0 3px 8px rgba(0,0,0,0.2);
+        {% if category=='success' %} background:#28a745;
+        {% elif category=='danger' %} background:#dc3545;
+        {% elif category=='warning' %} background:#ffc107; color:black;
+        {% else %} background:#17a2b8;
+        {% endif %}
+    ">
+      {{ message }}
+    </div>
+
+    <script>
+      setTimeout(() => {
+        let t = document.getElementById("toast");
+        if(t){ t.style.display="none"; }
+      }, 3000);
+    </script>
+
+  {% endif %}
+{% endwith %}
+
     <header>
 <!--        <div class="logo">-->
 <!--          &lt;!&ndash; Insert your logo image here &ndash;&gt;-->

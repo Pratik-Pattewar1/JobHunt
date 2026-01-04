@@ -123,6 +123,10 @@
     </style>
 </head>
 <body>
+
+
+
+
     <header>
 <!--        <div class="logo">-->
 <!--          &lt;!&ndash; Insert your logo image here &ndash;&gt;-->
@@ -153,6 +157,14 @@
             <p><strong>Email:</strong> {{ user_profile['email'] }}</p>
             <p><strong>Qualification:</strong> {{ user_profile['qualification'] }}</p>
             <p><strong>Skills:</strong> {{ user_profile['skills'] }}</p>
+             {% if user_profile.resume %}
+<p><strong>Resume:</strong>
+   <a href="/resume/{{ user_profile.resume }}" target="_blank">
+     Download
+   </a>
+</p>
+{% endif %}
+
 
         <div style="margin-top:20px;">
   <a href="/profile/edit" class="btn btn-primary"
@@ -169,5 +181,49 @@
     <script>
         console.log("HI");
     </script>
+<!-- GLOBAL TOAST -->
+<div id="toast"
+     style="position:fixed;
+            bottom:25px;
+            right:25px;
+            padding:14px 18px;
+            border-radius:10px;
+            color:white;
+            font-weight:600;
+            display:none;
+            box-shadow:0 4px 10px rgba(0,0,0,0.25);
+            z-index:99999;">
+</div>
+
+<script>
+  function showToast(msg, type){
+
+    let toast = document.getElementById("toast");
+
+    toast.innerHTML = msg;
+
+    if(type === "success")
+        toast.style.background = "#28a745";
+    else if(type === "error")
+        toast.style.background = "#dc3545";
+    else
+        toast.style.background = "#17a2b8";
+
+    toast.style.display = "block";
+
+    setTimeout(()=> toast.style.display="none", 2000);
+  }
+</script>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% set category, msg = messages[-1] %}
+    <script>
+        showToast("{{ msg }}", "{{ category }}")
+    </script>
+  {% endif %}
+{% endwith %}
+
 </body>
 </html>
+
+
