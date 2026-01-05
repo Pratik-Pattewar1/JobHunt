@@ -158,7 +158,7 @@
             <th>Qualifications</th>
             <th>Vacancy</th>
             <th>Last Date to Apply</th>
-            <th>Apply fro job</th>
+            <th>Apply for job</th>
         </tr>
         {% for job in jobs %}
         <tr>
@@ -169,7 +169,25 @@
             <td>{{ job.qualifications }}</td>
             <td>{{ job.vacancy }}</td>
             <td>{{ job.last_date }}</td>
-            <td><a href="/apply-job" class="apply-button">Apply</a></td>
+            <td>
+
+{% if job.job_title in user_applied_titles %}
+
+
+<button disabled style="background:gray;color:white;padding:8px 12px;border-radius:6px;">
+  Applied
+</button>
+
+{% else %}
+
+<a href="/apply/{{ job.id }}" class="apply-button">
+  Apply
+</a>
+
+{% endif %}
+
+</td>
+
         </tr>
         {% endfor %}
     </table>

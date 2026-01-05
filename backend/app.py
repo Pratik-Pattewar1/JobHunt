@@ -185,50 +185,92 @@ def edit_profile():
 # ---------------- JOB LIST ----------------
 @app.route('/jobs')
 def all_jobs():
-    if 'loggedin' in session:
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM job')
-        jobs = cursor.fetchall()
-        return render_template('jobs.html', jobs=jobs)
-    return redirect(url_for('login'))
 
-
-# ---------------- APPLY JOB ----------------
-@app.route('/apply-job', methods=['GET', 'POST'])
-def apply_job():
     if 'loggedin' not in session:
         return redirect(url_for('login'))
 
-    if request.method == 'POST':
-        email = session['email']
-        job_title = request.form['jobTitle']
-        job_role = request.form['jobRole']
-        skills = request.form['skills']
+    email = session['email']
 
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-        cursor.execute("""
-            SELECT * FROM applied_job 
-            WHERE email=%s AND job_title=%s
-        """, (email, job_title))
+    # get all jobs
+    cursor.execute('SELECT * FROM job')
+    jobs = cursor.fetchall()
 
-        existing = cursor.fetchone()
+    # get job titles user applied to
+    cursor.execute("""
+        SELECT job_title FROM applied_job 
+        WHERE email=%s
+    """, (email,))
 
-        if existing:
-            flash("You have already applied for this job.", "warning")
-            return redirect(url_for('applied_jobs'))
+    applied_rows = cursor.fetchall()
 
-        cursor.execute("""
-            INSERT INTO applied_job (email, job_title, job_role, skills, status)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (email, job_title, job_role, skills, "Pending"))
+    # convert to set
+    user_applied_titles = {row['job_title'] for row in applied_rows}
 
-        mysql.connection.commit()
+    cursor.close()
 
-        flash("Application submitted successfully!", "success")
-        return redirect(url_for('applied_jobs'))
+    return render_template(
+        'jobs.html',
+        jobs=jobs,
+        user_applied_titles=user_applied_titles
+    )
 
-    return render_template('apply-job.html')
+
+
+
+# ---------------- APPLY JOB ----------------
+@app.route('/apply/<int:job_id>')
+def apply_job(job_id):
+
+    if 'loggedin' not in session:
+        return redirect(url_for('login'))
+
+    email = session['email']
+
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+    # 1. get job details
+    cursor.execute("""
+        SELECT * FROM job WHERE id=%s
+    """, (job_id,))
+    job = cursor.fetchone()
+
+    if not job:
+        flash("Job not found", "danger")
+        return redirect(url_for('all_jobs'))
+
+    # 2. check if already applied
+    cursor.execute("""
+        SELECT * FROM applied_job
+        WHERE email=%s AND job_title=%s
+    """, (email, job['job_title']))
+
+    existing = cursor.fetchone()
+
+    if existing:
+        flash("You already applied for this job.", "warning")
+        return redirect(url_for('all_jobs'))
+
+    # 3. insert new application
+    cursor.execute("""
+        INSERT INTO applied_job (email, job_title, job_role, skills, status)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (
+        email,
+        job['job_title'],
+        job['job_role'],
+        job['skills'],
+        "Pending"
+    ))
+
+    mysql.connection.commit()
+    cursor.close()
+
+    flash("Application submitted successfully!", "success")
+    return redirect(url_for('all_jobs'))
+
+
 
 
 # ---------------- ADMIN JOB POST ----------------
@@ -260,17 +302,6 @@ def job_post():
         return redirect(url_for('job_post'))
 
     return render_template('job-post.html')
-
-
-
-
-@app.route('/resume/<filename>')
-def resume_file(filename):
-
-    if 'loggedin' not in session:
-        return redirect(url_for('login'))
-
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
 # ---------------- ADMIN DASHBOARD ----------------
